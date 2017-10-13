@@ -152,6 +152,14 @@ This script is included in /build.xml and /config/update-dependencies.xml.
         </javac>
     </presetdef>
 
+    <presetdef name="lwjgl.java9c">
+        <javac sourcepath="" debug="yes" encoding="UTF-8">
+            <compilerarg line="-source 9"/>
+            <compilerarg line="-target 9"/>
+            <compilerarg value="-Xlint:all"/>
+        </javac>
+    </presetdef>
+
     <macrodef name="quiet">
         <element name="body" implicit="yes"/>
         <sequential>

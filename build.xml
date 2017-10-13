@@ -371,6 +371,7 @@
 
             <include name="**/*.java"/>
             <exclude name="**/package-info.java"/>
+            <exclude name="**/module-info.java"/>
 
             <patternset refid="excluded.sources.withCore"/>
             <patternset refid="excluded.sources"/>
@@ -378,6 +379,14 @@
             <!-- Supresses internal API (e.g. Unsafe) usage warnings -->
             <compilerarg value="-XDignore.symbol.file=true"/>
         </lwjgl.javac>
+        <lwjgl.java9c destdir="${bin.core}" taskname="javac: Core" if:set="jdk9">
+            <src>
+                <pathelement path="${src.core}"/>
+                <pathelement path="${src.generated.java}"/>
+            </src>
+
+            <include name="**/module-info.java"/>
+        </lwjgl.java9c>
     </target>
 
     <target name="compile-native" description="Compiles the native source code" depends="init, compile">
@@ -989,10 +998,14 @@
                     <exclude name="org/lwjgl/system/rpmalloc/**"/>
                 </fileset>
 
-                <fileset dir="${bin.core}" includes="META-INF/versions/9/**" if:set="jdk9"/>
+                <fileset dir="${bin.core}" if:set="jdk9">
+                    <include name="module-info.class"/>
+                    <include name="META-INF/versions/9/**"/>
+                </fileset>
             </classes>
             <sources>
                 <fileset dir="${src.core}">
+                    <include name="module-info.java"/>
                     <include name="org/lwjgl/*.java"/>
                     <include name="org/lwjgl/system/**"/>
                 </fileset>
