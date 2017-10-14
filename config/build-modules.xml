@@ -1,0 +1,79 @@
+<!--
+  ~ Copyright LWJGL. All rights reserved.
+  ~ License terms: https://www.lwjgl.org/license
+  -->
+
+<!--
+Defines macros to help generating Java 9 module definitions.
+
+This script is included in /build.xml.
+-->
+<project name="modules" basedir="../" xmlns:if="ant:if" xmlns:unless="ant:unless">
+    <import file="build-definitions.xml"/>
+
+    <property name="src.modules" location="${module.core}/src/jigsaw" relative="true"/>
+
+    <property name="bin.modules" location="${bin}/Modules" relative="true"/>
+
+    <!-- Create symlink from bin/Modules/<package>/org
+    to bin/Core/org. Needed by javac to locate packages
+    referenced in module-info.java. -->
+    <macrodef name="symlink-module">
+        <attribute name="dir"/>
+
+        <sequential>
+
+            <local name="useSymlink"/>
+            <condition property="useSymlink" value="1">
+                <and>
+                    <not>
+                        <available property="dirExists" file="${bin.modules}/@{dir}/org" type="dir"/>
+                    </not>
+                </and>
+            </condition>
+
+            <local name="useSymlinkWindows"/>
+            <condition property="useSymlinkWindows" value="1">
+                <and>
+                    <isset property="useSymlink"/>
+                    <isset property="platform.windows"/>
+                </and>
+            </condition>
+
+            <exec executable="cmd" if:set="useSymlinkWindows" failonerror="true">
+                <arg value="/c"/>
+                <arg value="mklink"/>
+                <arg value="/J"/>
+                <arg value="${bin.modules}\@{dir}\org"/>
+                <arg value="${bin.core}\org"/>
+            </exec>
+        </sequential>
+    </macrodef>
+
+    <!-- Compile module-info.java for the specified module. -->
+    <macrodef name="compile-module">
+        <attribute name="dir"/>
+        <attribute name="requires-lwjgl" default="true"/>
+        <sequential>
+            <mkdir dir="${bin.modules}/@{dir}"/>
+            <symlink-module dir="@{dir}"/>
+            <lwjgl.java9c destdir="${bin.modules}/@{dir}" taskname="javac: Modules">
+                <src>
+                    <pathelement path="${src.modules}/@{dir}/java"/>
+                    <!--<pathelement path="${src.generated.java}"/>-->
+                </src>
+                <include name="module-info.java"/>
+                <compilerarg line="--module-path ${bin.modules}/lwjgl" if:true="@{requires-lwjgl}"/>
+            </lwjgl.java9c>
+        </sequential>
+    </macrodef>
+
+    <macrodef name="lwjgl.compile-modules">
+        <sequential>
+            <compile-module dir="lwjgl" requires-lwjgl="false"/>
+            <compile-module dir="lwjgl-stb" if:true="${binding.stb}"/>
+            <compile-module dir="lwjgl-xxhash" if:true="${binding.xxhash}"/>
+        </sequential>
+    </macrodef>
+
+</project>

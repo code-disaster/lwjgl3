@@ -11,6 +11,7 @@
     <import file="${config}/build-definitions.xml"/>
     <import file="${config}/build-assets.xml"/>
     <import file="${config}/${platform}/build.xml"/>
+    <import file="${config}/build-modules.xml"/>
 
     <!-- Initialize build -->
     <target name="init" description="Initializes the directories required by the build process">
@@ -36,6 +37,7 @@
         <mkdir dir="${bin.templates}"/>
         <mkdir dir="${bin.tests}"/>
         <mkdir dir="${bin.native}"/>
+        <mkdir dir="${bin.modules}" if:set="jdk9"/>
 
         <ant antfile="update-dependencies.xml" target="check-dependencies" inheritAll="false"/>
 
@@ -103,6 +105,7 @@
     <target name="clean-java" description="Deletes Java binary files produced by this script">
         <delete dir="${bin.core}"/>
         <delete dir="${bin.tests}"/>
+        <delete dir="${bin.modules}" if:set="jdk9"/>
     </target>
 
     <target name="clean-native" description="Deletes native binary files produced by this script">
@@ -371,7 +374,6 @@
 
             <include name="**/*.java"/>
             <exclude name="**/package-info.java"/>
-            <exclude name="**/module-info.java"/>
 
             <patternset refid="excluded.sources.withCore"/>
             <patternset refid="excluded.sources"/>
@@ -379,14 +381,7 @@
             <!-- Supresses internal API (e.g. Unsafe) usage warnings -->
             <compilerarg value="-XDignore.symbol.file=true"/>
         </lwjgl.javac>
-        <lwjgl.java9c destdir="${bin.core}" taskname="javac: Core" if:set="jdk9">
-            <src>
-                <pathelement path="${src.core}"/>
-                <pathelement path="${src.generated.java}"/>
-            </src>
-
-            <include name="**/module-info.java"/>
-        </lwjgl.java9c>
+        <lwjgl.compile-modules if:set="jdk9"/>
     </target>
 
     <target name="compile-native" description="Compiles the native source code" depends="init, compile">
@@ -761,6 +756,7 @@
         <attribute name="destfile"/>
         <attribute name="package"/>
         <attribute name="title"/>
+        <attribute name="auto-module" default="false"/>
         <attribute name="multi-release" default="false"/>
         <element name="content" optional="true" implicit="true"/>
         <sequential>
@@ -772,7 +768,7 @@
                     <attribute name="Implementation-Title" value="${module}"/>
                     <attribute name="Implementation-Version" value="${revision}"/>
                     <attribute name="Implementation-Vendor" value="lwjgl.org"/>
-                    <attribute name="Automatic-Module-Name" value="@{package}"/>
+                    <attribute name="Automatic-Module-Name" value="@{package}" if:true="@{auto-module}"/>
                     <attribute name="Multi-Release" value="true" if:true="@{multi-release}"/>
                 </manifest>
                 <content/>
@@ -824,15 +820,15 @@
                 </fileset>
             </checksum>
 
-            <lwjgl-jar destfile="${release}/${module}/${module}-natives-linux.jar" package="@{package}.natives.linux" title="@{title}">
+            <lwjgl-jar destfile="${release}/${module}/${module}-natives-linux.jar" package="@{package}.natives.linux" title="@{title}" auto-module="true">
                 <fileset dir="${release}/${module}/native" includes="*.so*"/>
             </lwjgl-jar>
 
-            <lwjgl-jar destfile="${release}/${module}/${module}-natives-macos.jar" package="@{package}.natives.macos" title="@{title}">
+            <lwjgl-jar destfile="${release}/${module}/${module}-natives-macos.jar" package="@{package}.natives.macos" title="@{title}" auto-module="true">
                 <fileset dir="${release}/${module}/native" includes="*.dylib*"/>
             </lwjgl-jar>
 
-            <lwjgl-jar destfile="${release}/${module}/${module}-natives-windows.jar" package="@{package}.natives.windows" title="@{title}">
+            <lwjgl-jar destfile="${release}/${module}/${module}-natives-windows.jar" package="@{package}.natives.windows" title="@{title}" auto-module="true">
                 <fileset dir="${release}/${module}/native" includes="*.dll*"/>
             </lwjgl-jar>
         </sequential>
@@ -877,6 +873,7 @@
                 <lwjgl-jar destfile="${release}/${module}/${module}.jar" package="@{package}" title="@{title}" multi-release="@{multi-release}">
                     <fileset dir="${release}/${module}/native" includes="*.sha1" unless:true="@{java-only}"/>
                     <fileset dir="${bin.core}" includes="${module.package}/**" unless:set="module.package.skip"/>
+                    <fileset dir="${bin.modules}/${module}" includes="module-info.class" if:set="jdk9"/>
                     <classes/>
                 </lwjgl-jar>
                 <delete dir="${release}/${module}/native" unless:true="@{java-only}"/>
@@ -999,13 +996,11 @@
                 </fileset>
 
                 <fileset dir="${bin.core}" if:set="jdk9">
-                    <include name="module-info.class"/>
                     <include name="META-INF/versions/9/**"/>
                 </fileset>
             </classes>
             <sources>
                 <fileset dir="${src.core}">
-                    <include name="module-info.java"/>
                     <include name="org/lwjgl/*.java"/>
                     <include name="org/lwjgl/system/**"/>
                 </fileset>
