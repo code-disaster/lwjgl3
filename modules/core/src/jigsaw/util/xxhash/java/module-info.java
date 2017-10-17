@@ -1,4 +1,4 @@
 module org.lwjgl.util.xxhash {
-	requires org.lwjgl;
+    requires org.lwjgl;
     exports org.lwjgl.util.xxhash;
 }

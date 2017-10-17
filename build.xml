@@ -873,7 +873,7 @@
                 <lwjgl-jar destfile="${release}/${module}/${module}.jar" package="@{package}" title="@{title}" multi-release="@{multi-release}">
                     <fileset dir="${release}/${module}/native" includes="*.sha1" unless:true="@{java-only}"/>
                     <fileset dir="${bin.core}" includes="${module.package}/**" unless:set="module.package.skip"/>
-                    <fileset dir="${bin.modules}/${module}" includes="module-info.class" if:set="jdk9"/>
+                    <fileset dir="${bin.modules}/@{module-name}" includes="module-info.class" if:set="jdk9"/>
                     <classes/>
                 </lwjgl-jar>
                 <delete dir="${release}/${module}/native" unless:true="@{java-only}"/>

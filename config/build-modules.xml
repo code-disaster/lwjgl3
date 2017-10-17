@@ -52,15 +52,16 @@ This script is included in /build.xml.
 
     <!-- Compile module-info.java for the specified module. -->
     <macrodef name="compile-module">
-        <attribute name="dir"/>
+        <attribute name="name"/>
+        <attribute name="src-dir" default="@{name}"/>
+        <attribute name="bin-dir" default="lwjgl-@{name}"/>
         <attribute name="requires-lwjgl" default="true"/>
         <sequential>
-            <mkdir dir="${bin.modules}/@{dir}"/>
-            <symlink-module dir="@{dir}"/>
-            <lwjgl.java9c destdir="${bin.modules}/@{dir}" taskname="javac: Modules">
+            <mkdir dir="${bin.modules}/@{bin-dir}"/>
+            <symlink-module dir="@{bin-dir}"/>
+            <lwjgl.java9c destdir="${bin.modules}/@{bin-dir}" taskname="javac: Modules">
                 <src>
-                    <pathelement path="${src.modules}/@{dir}/java"/>
-                    <!--<pathelement path="${src.generated.java}"/>-->
+                    <pathelement path="${src.modules}/@{src-dir}/java"/>
                 </src>
                 <include name="module-info.java"/>
                 <compilerarg line="--module-path ${bin.modules}/lwjgl" if:true="@{requires-lwjgl}"/>
@@ -70,9 +71,33 @@ This script is included in /build.xml.
 
     <macrodef name="lwjgl.compile-modules">
         <sequential>
-            <compile-module dir="lwjgl" requires-lwjgl="false"/>
-            <compile-module dir="lwjgl-stb" if:true="${binding.stb}"/>
-            <compile-module dir="lwjgl-xxhash" if:true="${binding.xxhash}"/>
+            <compile-module name="lwjgl" bin-dir="lwjgl" requires-lwjgl="false"/>
+            <compile-module name="assimp" if:true="${binding.assimp}"/>
+            <compile-module name="bgfx" if:true="${binding.bgfx}"/>
+            <compile-module name="egl" if:true="${binding.egl}"/>
+            <compile-module name="glfw" if:true="${binding.glfw}"/>
+            <compile-module name="jawt" src-dir="system/jawt" if:true="${binding.jawt}"/>
+            <compile-module name="jemalloc" src-dir="system/jemalloc" if:true="${binding.jemalloc}"/>
+            <compile-module name="lmdb" src-dir="util/lmdb" if:true="${binding.lmdb}"/>
+            <compile-module name="nanovg" if:true="${binding.nanovg}"/>
+            <compile-module name="nfd" src-dir="util/nfd" if:true="${binding.nfd}"/>
+            <compile-module name="nuklear" if:true="${binding.nuklear}"/>
+            <compile-module name="openal" if:true="${binding.openal}"/>
+            <compile-module name="opencl" if:true="${binding.opencl}"/>
+            <compile-module name="opengl" if:true="${binding.opengl}"/>
+            <compile-module name="opengles" if:true="${binding.opengles}"/>
+            <compile-module name="openvr" if:true="${binding.openvr}"/>
+            <compile-module name="ovr" if:true="${binding.ovr}"/>
+            <compile-module name="par" src-dir="util/par" if:true="${binding.par}"/>
+            <compile-module name="remotery" src-dir="util/remotery" if:true="${binding.remotery}"/>
+            <compile-module name="rpmalloc" src-dir="system/rpmalloc" if:true="${binding.rpmalloc}"/>
+            <compile-module name="sse" src-dir="util/simd" if:true="${binding.sse}"/>
+            <compile-module name="stb" if:true="${binding.stb}"/>
+            <compile-module name="tinyexr" src-dir="util/tinyexr" if:true="${binding.tinyexr}"/>
+            <compile-module name="tinyfd" src-dir="util/tinyfd" if:true="${binding.tinyfd}"/>
+            <compile-module name="vulkan" if:true="${binding.vulkan}"/>
+            <compile-module name="xxhash" src-dir="util/xxhash" if:true="${binding.xxhash}"/>
+            <compile-module name="yoga" src-dir="util/yoga" if:true="${binding.yoga}"/>
         </sequential>
     </macrodef>
 
